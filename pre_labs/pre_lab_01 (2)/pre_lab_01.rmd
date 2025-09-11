@@ -62,7 +62,7 @@ What does it return? Type your answer below:
 **Task** In the console, run the following code to install the Tidyverse:
 
 ```{r}
-install.packages('tidyverse')
+#install.packages('tidyverse')
 ```
 
 **Task** Add that
@@ -70,7 +70,7 @@ install.packages('tidyverse')
 Then run the following code to install the rmarkdown library
 
 ```{r}
-install.packages('rmarkdown')
+#install.packages('rmarkdown')
 ```
 
 ### Task 4: Load libraries
@@ -95,7 +95,7 @@ umd_courses <- read_rds("umd_courses.rds")
 
 Once it loads, look at the environment window at right in RStudio for umd_courses It's next to a small blue circle with a white arrow in it. To the right of that, look at how many "obs" the dataset has ("obs" is short for observation, which is another way of saying rows or records). Look at how many variables it has (another way of saying columns or fields). Write the number of observations and variables below.
 
-**Answer**
+**Answer** 79366 obs.
 
 ### Task 6: Glimpse data
 
@@ -105,7 +105,8 @@ Once it loads, look at the environment window at right in RStudio for umd_course
 glimpse(umd_courses)
 ```
 
-In the space below, write the data type for the "id" column and the "seats" column (it's in light gray, offset by \< \>). **Answer**
+In the space below, write the data type for the "id" column and the "seats" column (it's in light gray, offset by \< \>). 
+**Answer** "id" <chr> "seats" <dbl>
 
 ### Task 7: Examine data "head"
 
@@ -140,6 +141,10 @@ umd_courses |>
 Describe what you think each line of this code is doing below, based on the result:
 
 **Answer**
+umd_courses |> is taking the umd_courses dataset and connecting it to the next function
+group_by(term) |> is sorting the rows in the data set by the same term 
+summarise(count_classes =n()
+) counts how many classes were offered in that term
 
 ### Task 10: Adding arrange to sort the data
 
@@ -154,7 +159,8 @@ umd_courses |>
   arrange(desc(count_classes))
 ```
 
-Compared to the previous codeblock, what has changed and how did that affect the result? **Answer**
+Compared to the previous codeblock, what has changed and how did that affect the result? **Answer** 
+we added arrange(desc(count_classes)) which sorts the data by size of the classes, the terms with the most classes appear at the top instead of chronological order
 
 ### Task 11: Grouping by multiple columns
 
@@ -172,6 +178,7 @@ umd_courses |>
 Compared to the previous codeblock, how did the output change and what in the code changed it?
 
 **Answer**
+now we are shown the number of classes in each department for each term, sorted by term and then alphabetically by department
 
 ### Task 12: Other summary functions
 
@@ -188,6 +195,7 @@ umd_courses |>
 ```
 
 Compared to the previous codeblock, what has changed and how did that affect the result? **Answer**
+now the code also sorts by the number of total seats offered in each term and sorts the table from largest to smallest
 
 ### Task 13: different kinds of summarizations
 
@@ -206,6 +214,8 @@ umd_courses |>
 ```
 
 Compared to the previous codeblock, what has changed and how did that affect the result? What do the top terms have in common? **Answer**
+we can now see the total, mean and median seats for each term and it sorts by total seats instead of number of classes.
+the top terms all have the most seats, meaning they had larger or more courses. 
 
 ### Task 14: more aggregations
 
@@ -228,6 +238,7 @@ umd_courses |>
 Compared to the previous codeblock, what has changed and how did that affect the result? How is the data sorted?
 
 **Answer**
+the data is now grouped by department instead of term. the results are sorted by total seats in descending order, departments with the most seats appear at the top.
 
 ### Task 12: Questions
 
@@ -235,8 +246,8 @@ No code here; I want you to provide three questions that this data suggests to y
 
 **Answer**
 
-1.  
+1.  Which departments have offered the largest number of seats across terms consistently?
 
-2.  
+2.  Do certain departments have more variability in class sizes than others?
 
-3.  
+3. Which departments have very high enrollment totals and class sizes and may need more resources?
