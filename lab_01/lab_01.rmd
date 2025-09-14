@@ -1,0 +1,93 @@
+---
+title: "lab_01"
+author: "Derek Willis"
+date: "2025-01-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Turn off scientific notation
+options(scipen=999)
+```
+
+## About this lab
+
+To complete this lab, you need to: \* run existing code as directed (look for **Task**). \* modify existing code as directed (look for **Task**). \* write code in empty codeblocks provided to answer questions included (look for **Q**). \* write out the answer in the form of a complete sentence in the space given (look for **A**). When you are finished, commit changes and push to your personal GitHub repo, then submit the URL to this document on ELMS.
+
+Remember to add any new verbs or concepts to your class reference notebook!
+
+## Load libraries and establish settings
+
+**Task** Run the codeblock below to load the Tidyverse. To run the codeblock, hit the little green play button in the upper right corner of the gray area (the codeblock) below.
+
+```{r}
+# Load the tidyverse. If you have not installed the tidyverse already, remove the # from the next line and run it first.  
+# install.packages('tidyverse')
+library(tidyverse)
+```
+
+## Load Data
+
+We're going to load the UMD courses data.
+
+**Task** Run the codeblock below to load the data, which is contained in an RDS file.
+
+```{r}
+umd_courses <- read_rds("lab_01.rds")
+```
+
+## Answer questions
+
+**Q1** Which department has the highest mean (average) number of seats for its classes? You need to show the department with the highest average first. Which one is the most surprising/interesting to you? **A1** The department with the highest mean number of seats for its classes is Computer, Math and Natural Sciences. What surprises me is First-Year Innovation and Research Experience as I have never heard of that department before. 
+
+```{r}
+umd_courses |>
+  group_by(department) |>
+  summarise(
+    mean_seats = mean(seats)
+  ) |>
+  arrange(desc(mean_seats))
+```
+
+**Q2** Find out the greatest number of times any individual class has been offered in our dataset. Your code must show the greatest number of classes first.
+**A2**
+The greatest number of times any individual class has been offered in our dataset is Doctoral Dissertation Research with 1,686 times offered. 
+
+```{r}
+umd_courses |>
+  group_by(title) |>
+  summarise(
+    times_offered = n()
+  ) |>
+  arrange(desc(times_offered))
+```
+
+**Q3** Count the number of courses for each instructor and department. Which instructor has taught the most?
+**A3**
+The instructor (real person) that has taught the most is Jason Kuo with 94 classes taught. 
+
+```{r}
+umd_courses |>
+  group_by(instructors) |>
+  summarise(
+    courses_taught = n()
+  ) |>
+  arrange(desc(courses_taught))
+```
+
+**Q4** Given the results for Q3, what would have made it easier to find the answer? You don't have to know *how* to accomplish this; I want you to describe in words what would make the answer easier to see. How confident are you that the answer you got is the right one, and why? **A4**
+I think it would be easier if the dataset had a single line for each instructor, as in multiple instructors were not listed in the same row. It would also be easier if N/A was not listed as an instructor as that gets a bit confusing. I am pretty confident that the answer I got is correct because the data was organized in highest to lowest order per number of courses taught by instructor. I'm scared that it might have not separated the instructors that are listed on a row together, but hopefully it did.
+
+**Q5** Take one of the questions you listed in the final question of the pre_lab and try to answer it here in code. If you don't know how to fully answer it, write what code you can and describe in words what else you would need to do. If you got an answer, is it interesting? **A5**
+Which departments have offered the largest number of seats across terms consistently?
+We technically answered this earlier, but the department that has offered the largest number of seats across terms consistently is Business and Management with 212,114 seats offered. 
+
+```{r}
+umd_courses |>
+  group_by(department) |>
+  summarise(
+    total_seats = sum(seats)
+  ) |>
+  arrange(desc(total_seats))
+```
