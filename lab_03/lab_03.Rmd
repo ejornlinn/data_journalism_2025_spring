@@ -46,7 +46,8 @@ md_grants_loans <- read_csv("data/State_of_Maryland_Grant_and_Loan_Data__FY2009_
 clean_md_grants_loans <- md_grants_loans |>
   clean_names() |>
     rename(source = grantor) |>
-  mutate(source = str_to_upper(source), grantee = str_to_upper(grantee), description = str_to_upper(description))
+  mutate(source = str_to_upper(source), grantee = str_to_upper(grantee), description = str_to_upper(description)) |>
+ mutate(zip5 = str_sub(zip_code, start=1L, end=5L))
 ```
 
 ## Answer questions
@@ -69,9 +70,15 @@ pg_schools
 
 Q2: Using that `pg_schools` dataframe, write code to calculate the total amount of payments to the Prince George's County School system for each fiscal year. Which fiscal year had the largest total amount? Are there any aspects of the results that stand out to you?
 
-A2:
-
+A2: 2024 had the largest total amount with $2,264,915,282. What stood out to me was that 2023 data was nowhere to be found.
 ```{r}
+library(dplyr)
+pg_by_year <- pg_schools |>
+  group_by(fiscal_year) |>
+  summarize(total_amount = sum(amount, na.rm = TRUE)) |>
+  arrange(desc(total_amount))
+
+pg_by_year
 ```
 
 Q3. You're interested in examining the vendors paid for capital projects at the University of Maryland. Search the payments data to find those payments, then write code to produce a list of each vendor and the total amount it received.
@@ -79,20 +86,52 @@ Q3. You're interested in examining the vendors paid for capital projects at the 
 Look carefully at that list - what cleaning will it require to ensure that you have only one row per vendor and zip code? Provide at least three examples of vendor names that are similar and should be combined into one. Describe in words how you might clean that data so that any nearly identical vendors would look identical - what would you change and how?
 
 A3.
+1. PRINCE GEORGE'S COMM COLLG and PRINCE GEORGES COMMUNITY COLLEGE
+2. PRINCE GEORGE'S COUNTY LIBRARY and PRINCE GEORGE'S COUNTY MEMORIAL LIBRARY
+3. PRINCE GEORGE PUBLIC SCHOOLS and PRINCE GEORGES COUNTY PUBLIC SCHOOL
+I would clean the data by making sure each vendor has all letters and isn't missing any (like collg and college). I would also make sure they have all apostrophes, periods, and commas. Finally I would make sure they are not missing certain words and ensuring that they are either consistently abbreviated or not. 
 
 ```{r}
+pg_schools |>
+filter(str_detect(agency_name, "CAPITAL")) 
 ```
 
 Q4: You want to understand how much state grant money went to stem cell research projects each fiscal year. Search the data to find grants that fit that description. Once you find which column(s) contain the information you want, your code should find just the grants for stem cell research in a single filter. Then calculate the total amount of money for each fiscal year. Write a sentence summarizing how stem cell research funding has changed over time.
 
-A4:
+A4: In 2009, stem cell research funding was at 14,643,721 but then decreased by roughly half in 2010 with 7,870,123. It stayed about the same for the next decade, ranging from 9,000,000 to 6,000,000. It dipped down to 4,000,000 in 2021 until it jumped back up to 12,000,000 in 2023. 
 
 ```{r}
+stem_cell_research <- clean_md_grants_loans |>
+  filter(str_detect(description, regex("stem cell", ignore_case = TRUE)))
+
+stem_cell_research
+```
+
+```{r}
+stem_cell_by_year <- stem_cell_research |>
+  group_by(fiscal_year) |>
+  summarize(total_amount = sum(amount, na.rm = TRUE)) |>
+  arrange(fiscal_year)
+
+stem_cell_by_year
 ```
 
 Q5: Using the Maryland grants and loan data, find records where the zip code is the one where the University of Maryland-College Park is located in and produce a list of grantees from that zip code, along with the total amount they received. Write a paragraph explaining how many grantees are there, what you would need to do to clean the results so that you had one record per grantee and which grantees are most interesting to you?
 
-A5:
+A5:There are 62 grantees located with UMD zip codes. The highest is the E-NNOVATION INITIATIVE PROGRAM AND FUND with 4,156,250 and the lowest is SMALL BUSINESS RELIEF COVID19 EMERGENCY LOAN with 5,000 (there are 4 of these). To clean the results, I would combine some of the small business relief emergency loans. I would also clean the data to fix inconsistencies in spelling and punctuation, such as COLLEGE PARK CITY - UNIVERSITY PARTNERSHIP INC and COLLEGE PARK CITY UNIVERSITY PARTNERSHIP. The grantees that were interesting to me were the ones that weren't related to any specific foundation or cause, such as the HAIR AND SPACE BLOWDRY AND BEAUTY CO. 
 
 ```{r}
+umd_grants <- clean_md_grants_loans |>
+filter(str_detect(zip5,"20742|20740")) |>
+select(grantee, zip5, amount, fiscal_year, description, category) |>
+arrange(desc(fiscal_year)) 
+```
+
+```{r}
+umd_grants_summary <- umd_grants |>
+    group_by(grantee, zip5, category, description) |>
+  summarize(amount = sum(amount, na.rm = TRUE)) |>
+  arrange(desc(amount))
+
+umd_grants_summary
 ```
