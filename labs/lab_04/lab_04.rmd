@@ -1,0 +1,158 @@
+---
+title: "lab_04"
+author: "Derek Willis"
+date: "2023-10-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## About this lab
+
+To complete this lab, you need to: \* run existing code as directed (look for **Task**). \* modify existing code as directed (look for **Task**). \* write code in empty codeblocks provided to answer questions included (look for **Q**). \* write out the answer in the form of a complete sentence in the space given (look for **A**).
+
+When you are finished, commit changes and push to your personal GitHub repo, then submit the URL to this document on ELMS.
+
+## Load libraries and establish settings
+
+You'll need to load three packages for this: the tidyverse, lubridate and janitor.
+
+**Task** load these three packages.
+
+```{r}
+# Turn off scientific notation
+options(scipen=999)
+library(tidyverse)
+library(lubridate)
+library(janitor)
+# load your packages
+
+```
+
+For this lab, we want to investigate spending by Maryland state and local candidates during the 2022 election. For example, we could ask how much money have candidates and committees spent on advertising on Facebook? Which vendors received the most money for media expenses? We have the data, but it's messy - names of payees are spelled differently and capitalized differently - and we need to clean it up. We'll use a combination of RStudio and OpenRefine to do that.
+
+The basic process here is to start in RStudio, export data so that we can use OpenRefine to clean it up, and then bring it back into RStudio to finish our analysis.
+
+## Load Data
+
+You'll need to load one data set, a CSV file of Maryland campaign expenditures located in the data folder called "maryland_expenses.csv"
+
+**Task** Create a codeblock below, then read the data in and assign it to an appropriate variable name. You'll want to clean up the column names and make sure that any date columns are actually date datatypes.
+
+```{r}
+# Load the Maryland expenditures data table
+md_expenditures <- read_csv("data/maryland_expenses.csv")
+
+md_expenditures
+```
+
+```{r}
+md_expenditures <- md_expenditures|>
+   clean_names() |>
+  mutate(
+    across(contains("date"), ~mdy(.))  
+  )
+
+md_expenditures
+```
+## Answer questions
+
+**Q1.** You've been assigned to write about Maryland political committees' use of Facebook advertising. There's a category column in the data that has values for different kinds of spending. One of them is "Media". You'll need to complete the following steps:
+
+1.  Create a dataframe of Media expenses where the name of the payee is not NA.
+```{r}
+media_expenses <- md_expenditures |>
+  filter(expense_category == "Media", !is.na(payee_name))
+
+media_expenses
+```
+2.  Then, using `write_csv`, make a CSV file of your media expenses in your data folder. `write_csv()` is similar to `read_csv()` but you provide it with the dataframe you're writing and the file path.
+
+```{r}
+write_csv(media_expenses, "data/media_expenses.csv")
+```
+3.  Using OpenRefine, create a project using that CSV file, create a copy of the `payee_name` column called `payee_clean` and then standardize it, focusing on the payees that appear most often. Pay particular attention to variations of Facebook, bearing in mind that it changed its name in 2021: <https://about.fb.com/news/2021/10/facebook-company-is-now-meta/>), but also clean up variations of the most common payees.
+4.  When you are done standardizing `payee_clean`, export it as a new CSV file to your data folder, *giving it a different name* and read it back into RStudio as a new dataframe.
+5.  Using that `payee_clean` column in your new dataframe, calculate the total amount of Facebook spending by each committee and present the results showing the committee that spent the most first.
+
+**A1.**
+The committee that spent the most is Jain Ashwani Friends of with $6,2357.38
+
+```{r}
+clean_media_expenses <- read_csv("data/clean-media-expenses-csv.csv")
+
+clean_media_expenses
+```
+
+```{r}
+facebook_spending <- clean_media_expenses |>
+  filter(str_detect(payee_clean, "Meta|Facebook")) |>
+  group_by(committee_name) |>
+  summarize(total_spent = sum(amount, na.rm = TRUE)) |>
+  arrange(desc(total_spent))
+
+facebook_spending
+```
+**Q2.** Let's do some research on the top committees from question 1. Look up the top 10 spenders: if they are candidate committees, what offices were they running for? If they were not candidates, what issues do they seem to care about? Write some sentences answering those questions, then go the Facebook ad library ([https://www.facebook.com/ads/library/?active_status=all&ad_type=political_and_issue_ads&country=US&sort_data\\[direction\\]=desc&sort_data\\[mode\\]=relevancy_monthly_grouped&media_type=all](https://www.facebook.com/ads/library/?active_status=all&ad_type=political_and_issue_ads&country=US&sort_data%5Bdirection%5D=desc&sort_data%5Bmode%5D=relevancy_monthly_grouped&media_type=all){.uri}) and look for ads from the top spender. What do you notice about the the information provided about those ads?
+
+**A2.**
+- Jain Ashwani Friends of: Jain Ashwani is a Democrat who ran for election to the US House. A few issues Ashwani cares about are free public college, canceled student debt and Medicare for all. 
+
+- Franchot Anderson-Walker for Maryland Slate: Peter Franchot is a Democrat ran alongside Monique Anderson-Walker for election for Maryland Governor. An issue they care about is protecting abortion rights and they are opposed to standardized testing. 
+
+- Franchot Peter Friends Of: See above
+
+- Casa in Action PAC: Casa in Action is a committee that aims to mobilize minority voters. They endorse candidates that "advance its membership's priorities and facilitates greater engagement of Latinos and voters of color in election."
+
+- Boniface Billy Friends Of: Billy Boniface is a Republican that ran for election to the Harford County Executive. He supports initiatives to reduce the county's debt burden and fully-fund the public school system. 
+
+- Baron Jon (Jonathan) for Maryland: Jon Baron is a Democrat that ran for election for Maryland Governor. Baron supports education, workforce development and public saftey. 
+
+- Jasani Salimah Friends of: Salimah Jasani ran for an at-large seat of the Baltimore City Public Schools. She supports educational equity and disability justice. 
+
+- WFP National Pac - Non-Contribution Account: Working Families Party is "regular people coming together across our differences to make a better future for us all." They fight for workers rights primarily. 
+
+- King and Siri for Maryland Slate: John King is a Democrat that ran for election for Governor of Maryland. King supports education reform, including universal access to preschool for three and four year olds and establishing a minimum starting salary of $60,000 for teachers. 
+
+- Shuman Eve T. Friends of: Eve T. Shuman is a Democrat that ran for election to Prince George's County Council. 
+
+Jain Ashwani is the top spender. The ads say they were paid for by Friends of Ashwani Jain. There are 590 results and they say they were launcehd May 2024. 
+
+**Q3.** Given the list of top spenders in A1 and the primary results for governor (<https://elections.maryland.gov/elections/2022/primary_results/gen_results_2022_1.html>), who is missing from that Q1 list? Did those campaigns run Facebook ads? Who are the biggest recipients of media expenses by the Democratic primary winner for governor (HINT: that person has two committees, the second one with his running mate)?
+
+**A3.**
+There are a few candidates missing from this list, including Rushern Baker, Douglas Gansler, Ralph Jaffe, Wes Moore, Tom Perez and Jerome Segal. For example, Baker had 160 results, Gansler had 100, Moore has 1,900 (understandable as he is in office). The biggest recipients of media expenses by the Wes Moore is SKDK with 6,078,481.01 from Moore Miller For Maryland Slate and SKDK with 94,320.70 from Moore Wes For Maryland. 
+
+```{r}
+moore_media_recipients <- clean_media_expenses |>
+  filter(str_detect(committee_name, "Moore")) |>   
+  filter(expense_category == "Media") |>          
+  group_by(committee_name, payee_clean) |>                        
+  summarize(total_received = sum(amount, na.rm = TRUE)) |>
+  arrange(desc(total_received))                   
+
+moore_media_recipients
+```
+
+**Q4.** The media expense data you cleaned also has a standardized purpose column. Write code to generate a list of the committees with the total amount of spending on online advertising. How does this list compare to the one from Q1 about top Facebook spenders? Of the top 5 committees who spent the most on Facebook ads from Q1, are there any that appear to have spent *all* of their online advertising dollars on Facebook?
+
+**A4.**
+CASA in Action PAC appears in both lists. They spent 20647.83	on Facebook and 536496.16 in total so they did not spend all of their online advertising dollars on Facebook. 
+
+```{r}
+online_ad_spending <- clean_media_expenses |>
+  filter(expense_purpose == "Online Advertising") |>
+  group_by(committee_name) |>
+  summarize(total_online_ad = sum(amount, na.rm = TRUE)) |>
+  arrange(desc(total_online_ad))
+
+online_ad_spending
+```
+			
+		
+**Q5** Your editor asks you to summarize your findings about spending on Facebook by Maryland political candidates. How much do we know and what don't we know? What's the best story idea you've found here?
+
+**A5**
+We know about Facebook spending habits and that they were a major channel for many candidates and PACs. We also know that Wes Moore's campaign committees were among the largest media spenders overall. We don't know the effectiveness of Facebook ads. We could write a story about comparing top Facebook ad spenders to their total online advertising efforts. This could reveal how candidates prioritize digital media and if Facebook is still a leader in adverstising and social media presence. We could specifically compare Wes Moore's efforts to the efforts of candidates that did not win and see if his strategy made any difference. 
