@@ -104,14 +104,29 @@ select(race, gender, armed_with, name) |>
 
 ### Sentence 3
 
-* **Sentence text**: [Paste in sentence to engineer here]
-* **Analysis summary**: [Write up two to three sentences describing the results of your analysis.  Were you able to confirm the finding? If not, why not?]
+* **Sentence text**: For both genders, a gun was the most common weapon. Of men killed, 57 percent were armed with a gun and of women, 44 percent. In other cases, women were armed with knives, cars, toy weapons, hammers and hatchets. By race, 147 of the women killed were White, 48 Black and 29 Hispanic. Five were Native American, four were Asian and three were other races. In 11 cases, race could not be determined. By percentages, men shot by police were less often White and more often Black or Hispanic.
+
+* **Analysis summary**: Our analysis also shows that guns were the most common weapon that peoeple fatally shot by police were armed with. 58.5 percent of males were armed with a gun, while 45.9 percent of females were armed with a gun. Other top weapons for females included knives, vehicles, and "replicas." By race, 254 of the women were White, 88 were Black, 59 were Hispanic, 11 were Asian, 8 were Native American, and 41 were listed as n/a or other. For men, while White males were largest total group shop by police, they were less likely to be shot than Black males. For example, 24.1 percent of men fatally shot were Black, even though only about 14.4 percent of the nation's population is Black. Overall, our findings show similar trends to The Post's analysis, but specific percentages and numbers vary as the dataset has been updated with years' more of data since The Post wrote its story. 
 
 ```{r}
 # Put code to reverse engineer sentence here
+armed_with_male <- fatal_police_shooting |> filter(gender=="male") |> group_by(armed_with) |> summarise(incident_total=n()) |> arrange(desc(incident_total)) |> mutate(pct_male =(incident_total/sum(incident_total))*100)
+
+armed_with_female <- fatal_police_shooting |> filter(gender=="female") |> group_by(armed_with) |> summarise(incident_total=n()) |> arrange(desc(incident_total)) |> mutate(pct_female =(incident_total/sum(incident_total))*100)
+
+females_by_race <- fatal_police_shooting |> filter(gender=="female") |> group_by(race) |> summarise(incident_total=n()) |> arrange(desc(incident_total)) 
+
+males_by_race <- fatal_police_shooting |> filter(gender=="male") |> group_by(race) |> summarise(incident_total=n()) |> arrange(desc(incident_total)) |> mutate(race_pct =(incident_total/sum(incident_total))*100)
+
 
 # Display results of code below this codeblock
+view(armed_with_male)
 
+view(armed_with_female)
+
+view(females_by_race)
+
+view(males_by_race)
 ```
 
 
