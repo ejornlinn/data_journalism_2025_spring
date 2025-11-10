@@ -1,0 +1,207 @@
+---
+title: "lab_08"
+author: "Derek Willis"
+date: "2025-01-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load libraries and establish settings
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(tidycensus)
+library(dplyr)
+```
+
+**Task** Create a codeblock and load appropriate packages and settings for this lab. We'll be making some charts, working with dates and retrieving Census data.
+
+## Load and modify data
+
+**Task** Create a codeblock and load the following data from the data folder:
+
+```{r}
+pg_2022_overdoses<- read_csv("data/prince_georges_2022_overdoses.csv")
+```
+
+-   Prince George's County 911 Overdose Calls
+
+You will need to create columns for the date, week and month based on the existing `datetime` column.
+
+```{r}
+pg_2022_overdoses <- pg_2022_overdoses |>
+  mutate(
+    date = as.Date(datetime),              
+    week = isoweek(datetime),             
+    month = month(datetime, label = TRUE)  
+  )
+pg_2022_overdoses
+```
+## Questions
+
+**Q1.** Which month saw the greatest percentage of total calls? Create a dataframe that calculates the percentage of all calls that each month's calls represents. Make a bar chart from that dataframe. Your bar chart must have:
+
+-   A clear title that states the main idea/finding
+-   Good labels for the x & y axis and a caption for the source, which is Prince George's County EMS.
+-   Readable bars - the values shouldn't be overlapping
+
+Compare the results here to those from the pre_lab_08 bar chart - are there major differences in the months with the highest and lowest figures? Describe that below.
+
+**A1.**
+The month that saw the greatest percentage of total calls is December with 10% and 141 calls. This is pretty different from the pre_lab_08 bar chart as in that chart the months that had the greatest amount of calls were the warmer months, August, May and March being the top 3. Now, the top three are December, July and November. Also, in the pre lab chart December had the second lowest amount of calls and now it has the most. 
+
+```{r}
+monthly_calls <- pg_2022_overdoses |>
+  group_by(month) |>
+  summarise(total_calls = n()) |>
+  mutate(percentage = (total_calls / sum(total_calls)) * 100) |>
+  arrange(desc(total_calls))  
+
+monthly_calls
+```
+
+```{r}
+monthly_calls <- monthly_calls |>
+  mutate(month = factor(month, levels = month[order(-percentage)]))
+
+
+ggplot(monthly_calls, aes(x = month, y = percentage)) +
+  geom_col(fill = "steelblue") +
+  labs(
+    title = "2022 Prince George's County Overdose Calls by Month",
+    x = "Month",
+    y = "Percentage of Total Calls",
+    caption = "Source: Prince George's County EMS"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+**Q2.** Let's visualize this data on a weekly basis using a line chart. As in Q1, generate a dataframe with the total number of calls for each week, and then create a line chart to show the distribution of calls over time. Your line chart must have:
+
+-   A clear title that states the main idea/finding
+-   Good labels for the x & y axis and a caption for the source, which is Prince George's County EMS.
+-   Readable labels
+
+Describe the pattern of results; you may want to look at the data to dig into particular outliers.
+
+**A2.**
+The week with the highest number of calls is 28 with 41 calls and the week with the lowest number of calls is 53 with 4 calls. Week 53 is the last week of the year and it is drastically different from all of the other calls (the second lowest is 17) so I think that maybe the data ended midway through the week or simply 2023 started at the beginning of that week which didn't allow for many calls. There is a fair amount of fluctuation between the weeks and I couldn't really find a signification pattern that relates the time of the year with the number of calls. However, there seems to be a slight incline in the number of calls as we go later into the year. 
+
+
+```{r}
+pg_2022_overdoses <- pg_2022_overdoses |>
+  mutate(year_week = paste0(year(datetime), "-", sprintf("%02d", week(datetime))))  
+weekly_calls <- pg_2022_overdoses |>
+  group_by(year_week) |>
+  summarise(total_calls = n()) |>
+  ungroup() |>
+  arrange(desc(total_calls))
+
+weekly_calls
+```
+
+```{r}
+ggplot(weekly_calls, aes(x = year_week, y = total_calls, group = 1)) +
+  geom_line(color = "steelblue", size = 1) +
+  geom_point(color = "steelblue") +
+  labs(
+    title = "Weekly Overdose Calls in Prince George's County, 2022",
+    x = "Week",
+    y = "Number of Calls",
+    caption = "Source: Prince George's County EMS"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)  # 
+  )
+```
+
+**Q3.** A scatterplot is a type of chart that helps us see relationships between two variables. One variable goes on the x axis, the other on the y axis. For each row/observation in our data, a scatterplot puts a circle (or a "point") where the two variables intersect on a grid.
+
+Statisticians use scatterplots to show graphically whether one variable is correlated -- related, in a statistical sense -- with another variable. A classic example is the [relationship between ice cream sales and temperature](https://www.mathsisfun.com/data/scatter-xy-plots.html). The scatterplot below -- press play to load the image -- shows that relationship, that an increase in temperature is associated with an increase in ice cream sales. When it's 12C, sales are 200 dollars, and when it's hotter, 25C, sales are 600 dollars.
+
+```{r}
+knitr::include_graphics("https://www.mathsisfun.com/data/images/scatter-ice-cream1.svg")
+```
+
+We're going to use a scatterplot a little differently, to get a visual sense of two key variables:
+
+Our question is: does the median income in a zip code have any relationship to the number of overdose 911 calls in that zip code?
+
+To answer this question, do the following:
+
+1.  Generate a dataframe with the number of 911 calls for each zip code.
+2.  Get data from the Census Bureau showing median household income for Maryland zip codes.
+3.  Join those two dataframes on their zip code columns, starting with the 911 calls dataframe.
+4.  Make a scatterplot showing the total calls and median income. I didn't show you how to do this, so look it up! Googling "ggplot scatterplot" is a good start.
+5.  Give it an appropriate title, source, and x and y axis titles.
+6.  Add a label for each point that shows the zip code using geom_text() - see some examples of its use at <https://ggplot2.tidyverse.org/reference/geom_text.html#ref-examples>. Try to make the names as easy to read as possible by avoiding overlap.
+7.  In the answer space below, describe what you see and answer the questions posed above. In a general sense, what do you think this means? Feel free to consider the actual raw values: how would you report out the main point(s) of this chart?
+
+**A3.**
+```{r}
+zip_calls <- pg_2022_overdoses |>
+group_by(zipcode) |>
+summarise(total_calls = n()) |>
+ungroup()
+
+zip_calls
+```
+
+```{r echo=FALSE}
+#census_api_key("29307c4d6092f28ad0c5fc9ecc4e26f0d1f7811aE", install=TRUE)
+```
+
+```{r}
+acs_2022 <- load_variables(2022, "acs5", cache = TRUE)
+
+acs_2022
+```
+```{r}
+median_house_income <- acs_2022 |>
+  filter(grepl("median household income", label, ignore.case = TRUE))
+median_house_income
+```
+```{r}
+income_zcta_md <- income_zcta |>
+  filter(GEOID %in% zip_calls$zipcode) |>
+  select(
+    zipcode = GEOID,
+    median_income = estimate
+  )
+
+head(income_zcta_md)
+```
+```{r}
+zip_data <- zip_calls |>
+  left_join(income_zcta_md, by = "zipcode")
+
+zip_data
+```
+```{r}
+zip_data_clean <- zip_data |>
+  filter(!is.na(median_income) & !is.na(total_calls)) |>
+  arrange(desc(total_calls))
+
+zip_data_clean
+```
+
+```{r}
+ggplot(zip_data_clean, aes(x = median_income, y = total_calls, label = zipcode)) +
+  geom_point(color = "steelblue", size = 3) +
+  geom_text(size = 3, vjust = -0.5, hjust = 0.5) +
+  labs(
+    title = "2022 PG County Overdose 911 Calls vs Median Household Income by ZIP Code",
+    x = "Median Household Income",
+    y = "Total Overdose 911 Calls",
+    caption = "Source: Prince George's County EMS & U.S. Census Bureau"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+The zip codes with the most amount of calls came from the 75000 median income range, with 20745 (Oxon Hill) having 101 calls, 20743 (Capitol Heights) having 100 calls and 20785 (Hyattsville) having 95 calls. Some of them overlap a bit (I figured out how to spread them out more using Google and it said to use the ggrepel package which we haven't downloaded yet). However, I consulted the data and the zip codes with the lowest amount of calls is 20601 (Waldorf), 20623 (Cheltenham) 20762 (Andrews Air Force Base) and 20904 (Silver Spring) all with 1 call. I think the median income does have a relationship to the number of 911 overdose calls, as the higher the median income, the lower the amount of calls. However, there are a few outliers where some of the lower number of calls exist in a lower median income. Overall, I do think there is a relationship. 
+
