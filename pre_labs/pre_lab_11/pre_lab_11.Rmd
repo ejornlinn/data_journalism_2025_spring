@@ -24,7 +24,7 @@ To do this, we'll need a new library -- [tidytext](https://cran.r-project.org/we
 **Task** Run the following code in the gray-colored codeblock below to load the libraries we'll use.
 
 ```{r}
-#install.packages("tidytext")
+install.packages("tidytext")
 library(tidyverse)
 library(tidytext)
 library(janitor)
@@ -39,7 +39,9 @@ Let's read in this data and examine it:
 
 ### Task 2: Read in data
 
-**Task** Run the following code and describe the dataframe it outputs. **Answer**
+**Task** Run the following code and describe the dataframe it outputs. 
+**Answer**
+The code gave me a dataframe called alerts with 15 columns, specifically a column called text in which I am assuming is where the original data was extracted from? It also has a filename which must be the file where the text came from. There is also a url column which might be a link to the file or the text?
 
 ```{r}
 alerts <- read_rds("data/md_doc_alerts.rds")
@@ -60,7 +62,9 @@ If you are trying to create a list of unique words, R will treat differences in 
 
 ### Task 4: Trying out unique
 
-**Task** Run the following code and describe what the `unique` function does to the original list of words. **Answer**
+**Task** Run the following code and describe what the `unique` function does to the original list of words. 
+**Answer**
+I think the unique function removes multiple repeats of a value so that you only see each item and keeps the first occurence. 
 
 ```{r}
 a_list_of_words <- c("Dog", "dog", "dog", "cat", "cat", ",")
@@ -71,7 +75,9 @@ Fortunately, this is a solved problem with tidytext, which has a function called
 
 ### Task 5: Trying out unnest_tokens
 
-**Task** Run the following code and describe the output of using the `unnest_tokens` function. **Answer**
+**Task** Run the following code and describe the output of using the `unnest_tokens` function. 
+**Answer**
+unnest_tokens seems to have taken the text column and broken it into individual words while also changing everything to lowercase and removing punctuation.
 
 ```{r}
 unique_words <- alerts |> select(text) |>
@@ -81,7 +87,9 @@ View(unique_words)
 
 ### Task 6: Make a column chart
 
-**Task** Run the following code and describe what the resulting graphic shows. Is it interesting? **Answer**
+**Task** Run the following code and describe what the resulting graphic shows. Is it interesting? 
+**Answer**
+The resulting graphic is a "count of unique words found in Maryland doctor discipline alerts" bar chart. It organizes the unique words from highest to lowest, highest being "the" and lowest being "her." I personally don't think this data is very interesting, it is in black and white and not very engaging. It also is literally counting the words found in Maryland doctor discipline alerts which I don't think is a very engaging topic. 
 
 Now we can look at the top words in this dataset. Let's limit ourselves to making a plot of the top 25 words, and we'll use the function `count` to do the counting:
 
@@ -127,7 +135,9 @@ From there, we can get a simple word frequency by just grouping them together an
 
 ### Task 8: Using anti_join
 
-**Task** Run the following code and describe the results. Is it more interesting than before? **Answer**
+**Task** Run the following code and describe the results. Is it more interesting than before? 
+**Answer**
+This code is definitely more interesting than the last one as it filtered out the filler words and only includes words that have meaning. I'm assuming than n is the number of times that the word appears and percent is the percentage amount of how many times the word appears in the text. 
 
 ```{r}
 unique_words |>
@@ -160,7 +170,9 @@ Then we can create top 10 lists for both of them and compare:
 
 ### Task 10: Create dataframes with the top 10 words in each year
 
-**Task** Run the following code and describe the results. **Answer**
+**Task** Run the following code and describe the results. 
+**Answer**
+This code gave us two datasets, unique_words_2023 and unique_words_2022, which list the top unique words from 2023 and the top unique words from 2022. The top five words from 2022 were maryland, board, of, physicians and department. The top five words from 2023 were trevia, hayden, md, harbhajan and ajrawat. I think there may be a few mistakes or something I need to look at further as those words are a bit strange.
 
 ```{r}
 unique_words_2023 |>
@@ -198,7 +210,9 @@ So this block is is going to do the following:
 
 ### Task 11: Create a dataframe with the top 10 two-word phrases for 2021
 
-**Task** Run the following code and describe the results. **Answer**
+**Task** Run the following code and describe the results. 
+**Answer**
+I got back data that gives me the top 10 two-word phrases for 2021. The data has three columns: bigram, n and percent. The phrases are health occ, md code, code ann, summary suspension, medical records, health care, unprofessional conduct, ann health, participant rehabilitation and repl vol. 
 
 ```{r}
 alerts |>
@@ -218,7 +232,9 @@ And we already have a different, more nuanced result. We can see that "summary s
 
 ### Task 12: Create a dataframe with the top 10 two-word phrases for 2023
 
-**Task** Run the following code and describe the results. **Answer**
+**Task** Run the following code and describe the results. 
+**Answer**
+The phrases "summary suspension," "unprofessional conduct" and "medical records" are still among the listed words. "Summary suspension" is still fourth, "unprofessional conduct" is still seventh and "medical records" is still fifth. The datasets are the exact same as far as I can see. 
 
 ```{r}
 alerts |>
@@ -238,7 +254,9 @@ And 2024?
 
 ### Task 13: Create a dataframe with the top 10 two-word phrases for 2024
 
-**Task** Run the following code and describe the results. **Answer**
+**Task** Run the following code and describe the results. 
+**Answer**
+Now, a few additional words are included: "individual 4," "prehearing conference," "individual 10" and "respondent's license." "Medical records" is no longer on the list, "summary suspension" is now second and "unprofessional conduct" is now eighth. 
 
 ```{r}
 alerts |>
@@ -264,7 +282,9 @@ Another popular use of text analysis is to measure the sentiment of a word - whe
 
 ### Task 14: Load the bing lexicon and produce sentiments for our 2021-2023 unique words
 
-**Task** Run the following code and describe the results. Do any of the sentiments seem incorrect or counter-intuitive? **Answer**
+**Task** Run the following code and describe the results. Do any of the sentiments seem incorrect or counter-intuitive? 
+**Answer**
+Examples like "patient" are counter-intuitive as patient is simply a term used to describe someone needing medical care which can be negative or positive depending on the context. Also there are words like "like" included which don't seem to even be able to be classified as negative or positive. 
 
 ```{r}
 bing <- get_sentiments("bing")
