@@ -1,0 +1,44 @@
+---
+title: "MD 2024 General Precinct Results"
+output: html_notebook
+Names: Ellie Jornlin, Jordan Fine, Adam Hudacek
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+Turn in, via GitHub, an updated draft data notebook (.RMD) that :
+Loads and cleans the core data set to prepare for analysis. 
+
+Shows basic exploratory analysis to demonstrate an understanding of the dataset, including the number of rows and columns, any obvious limitations or flaws and any reasons why it might not be able to answer the questions you've posed last week.
+
+1. Some limitations to the data include, it only covers 2024. This may make it harder to compare different years, we will need to find more data. Also, this data is only showing precinct level data this could make it hard to answer questions that involve different districts, or jurisdictions, or zip codes. Lastly, questions about different voter demographics may be hard to answer, they are not included in the data. 
+
+Task: Load libraries (we will probably want to load more libraries later to answer different questions)
+```{r}
+#load libraries 
+library(tidyverse)
+library(janitor)
+library(lubridate) #could be helpful because we are working with dates
+```
+
+```{r}
+#load data
+md_precinct <- read_csv("MD 2024 General Precinct Results - md_election_results.csv") |> #clean names 
+   clean_names()
+```
+
+```{r}
+#check out different column and row numbers 
+nrow(md_precinct) #there are 82772 rows 
+ncol(md_precinct) #there are 14 columns 
+```
+
+```
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
