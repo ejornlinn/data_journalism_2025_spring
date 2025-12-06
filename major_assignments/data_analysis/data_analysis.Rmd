@@ -35,7 +35,130 @@ nrow(md_precinct) #there are 82772 rows
 ncol(md_precinct) #there are 14 columns 
 ```
 
+Question 1: How did county vote totals change between the Presidential and Senatorial election in Maryland, and did one party have a more significant change in turnout than the other?
+Answer: 
+
+Most Maryland counties had slightly lower turnout for the Senate race than for the Presidential race. The counties that did have a higher Senate turnout are Anne Arundel, Baltimore City, Howard County, Montgomery County, Talbot County and Prince George's County, but every other county had a lower Senate race turnout. The county that had the biggest drop with 555 fewer voters in the Senate race, resulting in a 5.5% lower turnout. 
+
+Democratic turnout decreased significantly from the Presidential to the Senatorial race, a 13.4% decline from their Presidential vote total. Alternatively, Reupublican turnout increased in the Senatorial race, represented by a 24.8% increase. Libertarian votes grew from 15,258 to 67,818 which is a 344% increase. This drastic change is likely the result of having a candidate on the ballot or a specific reason that doesn't reflect a real ideological shift.  
+
+```{r}
+pres <- md_precinct |>
+  filter(contest == "President and Vice President of the United States") |>
+  group_by(jurisdiction, party) |>
+  summarize(pres_votes = sum(total_votes), .groups = "drop")
+
+sen <- md_precinct |>
+  filter(contest == "U.S. Senator") |>
+  group_by(jurisdiction, party) |>
+  summarize(sen_votes = sum(total_votes), .groups = "drop")
 ```
+
+```{r}
+combined <- pres |>
+  full_join(sen, by = c("jurisdiction", "party")) |>
+  replace_na(list(pres_votes = 0, sen_votes = 0)) |>
+  mutate(raw_change = sen_votes - pres_votes)
+```
+
+```{r}
+statewide_change <- combined |>
+  group_by(party) |>
+  summarize(
+    pres_total = sum(pres_votes),
+    sen_total = sum(sen_votes),
+    raw_change = sen_total - pres_total,
+    pct_change = (sen_total - pres_total) / pres_total * 100
+  )
+```
+
+```{r}
+county_engagement <- md_precinct |>
+  filter(contest %in% c("President and Vice President of the United States",
+                        "U.S. Senator")) |>
+  group_by(jurisdiction, contest) |>
+  summarize(total_votes = sum(total_votes), .groups = "drop") |>
+  pivot_wider(
+    names_from = contest,
+    values_from = total_votes
+  ) |>
+  mutate(
+    raw_change = `U.S. Senator` - `President and Vice President of the United States`,
+    pct_change = raw_change / `President and Vice President of the United States` * 100
+  )
+```
+
+Question 2: In which precincts did Harris and Alsobrooks have the best margins? In which precincts did they collect the most votes?
+
+Answer: 
+The precinct where Harris-Walz had the best margin is 1505 (015-005) Prince George's County in which they recieved 5,400 votes with the margin being 5,078. The precinct where Alsobrooks had the best margin is 1505 (015-005) with 5,273 votes and a margin of 4,747. The precinct where Harris-Walz had the most overall votes is 1505 (015-005) with 5,400. Finally, the precinct where Alsobrooks had the most overall votes is 1505 (015-005) with 5,273 votes. 
+```{r}
+agg_votes <- md_precinct |>
+  group_by(contest, precinct_id, precinct_name, candidate) |>
+  summarise(total_votes = sum(total_votes), .groups = "drop")
+```
+
+```{r}
+harris_margin <- md_precinct |>
+  filter(contest == "President and Vice President of the United States") |>
+  pivot_wider(
+    names_from = candidate,
+    values_from = total_votes,
+    values_fill = 0,
+    id_cols = c(jurisdiction, precinct_id, precinct_name)
+  ) |>
+  mutate(
+    margin = `Harris-Walz` - pmax(
+      `Trump-Vance`,
+      `Oliver-ter Maat`,
+      `Stein-Ware`,
+      `Kennedy, Jr.-Shanahan`,
+      `WRITE-IN`
+    )
+  )
+
+harris_best_margin <- harris_margin |>
+  slice_max(margin, n = 1)
+```
+
+```{r}
+alsobrooks_margin <- md_precinct |>
+  filter(contest == "U.S. Senator") |>
+  pivot_wider(
+    names_from = candidate,
+    values_from = total_votes,
+    values_fill = 0,
+    id_cols = c(jurisdiction, precinct_id, precinct_name)
+  ) |>
+  mutate(
+    margin = `Angela Alsobrooks` - pmax(
+      `Larry Hogan`,
+      `Mike Scott`,
+      `WRITE-IN`
+    )
+  )
+
+alsobrooks_best_margin <- alsobrooks_margin |>
+  slice_max(margin, n = 1)
+```
+
+```{r}
+most_harris_votes <- md_precinct |>
+  filter(candidate == "Harris-Walz") |>
+  slice_max(total_votes, n = 1)
+
+most_alsobrooks_votes <- md_precinct |>
+  filter(candidate == "Angela Alsobrooks") |>
+  slice_max(total_votes, n = 1)
+```
+
+```{r}
+print(harris_best_margin)
+print(alsobrooks_best_margin)
+print(most_harris_votes)
+print(most_alsobrooks_votes)
+```
+
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
 When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
