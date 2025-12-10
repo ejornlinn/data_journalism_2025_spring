@@ -35,12 +35,12 @@ nrow(md_precinct) #there are 82772 rows
 ncol(md_precinct) #there are 14 columns 
 ```
 
-Question 1: How did county vote totals change between the Presidential and Senatorial election in Maryland, and did one party have a more significant change in turnout than the other?
+Question 1: How did county vote totals change between the Presidential and Senatorial election in Maryland, and did one party have a more significant change in number of votes cast than the other?
 Answer: 
 
-Most Maryland counties had slightly lower turnout for the Senate race than for the Presidential race. The counties that did have a higher Senate turnout are Anne Arundel, Baltimore City, Howard County, Montgomery County, Talbot County and Prince George's County, but every other county had a lower Senate race turnout. The county that had the biggest drop with 555 fewer voters in the Senate race, resulting in a 5.5% lower turnout. 
+Most Maryland counties had slightly lower number of votes cast for the Senate race than for the Presidential race. The counties that did have higher Senate votes cast are Anne Arundel, Baltimore City, Howard County, Montgomery County, Talbot County and Prince George's County, but every other county had a lower number of Senate race votes cast. The county that had the biggest drop with 555 fewer voters in the Senate race, resulting in 5.5% lower number of votes cast. 
 
-Democratic turnout decreased significantly from the Presidential to the Senatorial race, a 13.4% decline from their Presidential vote total. Alternatively, Reupublican turnout increased in the Senatorial race, represented by a 24.8% increase. Libertarian votes grew from 15,258 to 67,818 which is a 344% increase. This drastic change is likely the result of having a candidate on the ballot or a specific reason that doesn't reflect a real ideological shift.  
+Democratic number of votes decreased significantly from the Presidential to the Senatorial race, a 13.4% decline from their Presidential vote total. Alternatively, Reupublican number of votes cast increased in the Senatorial race, represented by a 24.8% increase. Libertarian votes grew from 15,258 to 67,818 which is a 344% increase. This drastic change is likely the result of having a candidate on the ballot or a specific reason that doesn't reflect a real ideological shift.  
 
 ```{r}
 pres <- md_precinct |>
@@ -91,7 +91,7 @@ county_engagement <- md_precinct |>
 Question 2: In which precincts did Harris and Alsobrooks have the best margins? In which precincts did they collect the most votes?
 
 Answer: 
-The precinct where Harris-Walz had the best margin is 1505 (015-005) Prince George's County in which they recieved 5,400 votes with the margin being 5,078. The precinct where Alsobrooks had the best margin is 1505 (015-005) with 5,273 votes and a margin of 4,747. The precinct where Harris-Walz had the most overall votes is 1505 (015-005) with 5,400. Finally, the precinct where Alsobrooks had the most overall votes is 1505 (015-005) with 5,273 votes. 
+The precinct where Harris-Walz had the best margin is 1505 (015-005) Prince George's County in which they recieved 5,400 votes with the margin being 5,078. The precinct where Alsobrooks had the best margin is 1505 (015-005) with 5,273 votes and a margin of 4,747. The precinct where Harris-Walz had the most overall votes is 1505 (015-005) with 5,400. Finally, the precinct where Alsobrooks had the most overall votes is 1505 (015-005) with 5,273 votes. We chose to demonstrate our results with numbers rather than percentages because it better expresses specific changes in the data with specific numbers. 
 ```{r}
 agg_votes <- md_precinct |>
   group_by(contest, precinct_id, precinct_name, candidate) |>
