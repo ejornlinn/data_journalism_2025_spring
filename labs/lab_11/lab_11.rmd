@@ -16,7 +16,16 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load libraries and establish settings
 
 **Task** Create a codeblock and load appropriate packages and settings for this lab.
+```{r}
+library(tidyverse)
+library(janitor)
+library(rvest)
+library(lubridate)
+library(stringr)
 
+
+options(scipen = 999)
+```
 
 
 Let's get to scraping.
@@ -26,9 +35,23 @@ Let's get to scraping.
 **Q1**. Scrape the listing of available Maryland physician disciplinary alerts at <https://www.mbp.state.md.us/disciplinary_2024.aspx> into a dataframe. You should have three columns, one of which is a date, so make sure the date column has a date datatype. What's the most common sanction, and how many times is it mentioned in the 2024 alerts?
 
 **A1** 
+The most common sanction is Summary Suspension Affirmed and Surrender of License, which are both mentioned 7 times. 
 
 ```{r}
+sanctions_2024 <- "https://www.mbp.state.md.us/disciplinary_2024.aspx" |>
+  read_html() |>
+  html_table() |>
+  as.data.frame() |>
+  clean_names() |>
+  mutate(date = mdy(date))
 
+sanctions_2024 |>
+  group_by(sanction) |>
+  summarise(
+    count = n(),
+    date = first(date)  
+  ) |>
+  arrange(desc(count))
 ```
 
 **Q2** Next, let's scrape the list of press releases from Maryland's Office of the Public Defender, <https://www.opd.state.md.us/press-releases>. This isn't a table, so you'll need to use `html_elements()` and your browser's inspector and do some clean up on the results. The result should be a dataframe with two columns that contain the date and title, and the date column should have a date datatype. The challenge here is figuring out how to isolate the releases.
@@ -36,9 +59,43 @@ Let's get to scraping.
 When you finish scraping into a dataframe, write code to find the press releases that have the word "police" in the title.
 
 **A2** 
+There are 9 press releases that have the word "police" in the title. They are: 
+
+In Aftermath of Video Depicting Excessive Police Force, Public Defender Calls for the Implementation of Body Worn Cameras by Ocean City Police
+Public Defenders Testify About Police Violence and Misconduct Statewide; Need for Police Accountability, Transparency, and Reform
+Public Defender Seeks to Identify Cases Potentially Impacted by Breach of Salisbury Police Department
+Statement of Kirsten Getty-Downs, District Public Defender for Baltimore City, Regarding Police Corruption By Former BPD Officer Matthew Ryckman
+Another Problematic Police Body-Worn Camera Video Identified; Baltimore State’s Attorney Still Failing to Disclose Information in Impacted Cases
+Public Defender Discloses Video Evidence of Officers Planting Drugs; Demands Swift Action by Prosecutors and Thorough Review by Police
+OPD Statement on the Baltimore Police Department’s Secret Aerial Surveillance Program
+OPD Applauds DOJ Report, Urges Greater Transparency by the Baltimore City Police Department
+Police Continue to Illegally Arrest Children in Baltimore
 
 ```{r}
+opd_pressrelease <- read_html("https://opd.state.md.us/press-releases")
 
+press_release <- opd_pressrelease |>
+  html_elements('p') |>
+  html_text() |>
+  as_tibble() |>
+  separate(value, c("date", "title"), sep = ":", extra = "merge")
+```
+
+```{r}
+pressrelease_clean <- press_release |>
+  filter(date != "", !is.na(title)) |>
+  mutate(
+    date = mdy(str_trim(date)),
+    title = str_squish(title)
+  )
+```
+
+```{r}
+police_releases <- pressrelease_clean |>
+  filter(str_detect(title, regex("police", ignore_case = TRUE))) |>
+  select(date, title)
+
+police_releases
 ```
 
 **Q3** Sen. Chris Van Hollen, D-Maryland, has posted press releases at <https://www.vanhollen.senate.gov/news/press-releases>. It would be great to have them in a dataframe that has the following columns: date, title and url.
@@ -52,7 +109,64 @@ When you're done, rename the columns so they make sense, then make sure the date
 Finally, tell me what questions you could ask of this data if you had all of his press releases. Be creative.
 
 **A3**
+How many press releases does Van Hollen release per year? Has the number grown or decreased?
+What are the most common words or phrases in the titles of the press releases?
+Which year has the most press releases? Are there particulars seasons or months that have more?
+Which day of the week are press releases most commonly published?
+Are there specific topics of press release that are more common? 
+Are press releases more common around major political events?
 
 ```{r}
-
+press_page <- read_html("https://www.vanhollen.senate.gov/news/press-releases")
 ```
+
+```{r}
+press_dates <- press_page |>
+  html_elements("p") |>
+  html_text() |>
+  str_trim() |>
+  as_tibble() |>
+  rename(raw_date = value) |>
+  mutate(
+    cleaned_date = str_replace_all(raw_date, "\\.", "/"),  
+    date = mdy(cleaned_date)
+  ) |>
+  select(date)
+```
+
+```{r}
+press_titles <- press_page |>
+  html_elements("h2") |>
+  html_text() |>
+  str_trim() |>
+  as_tibble() |>
+  rename(title = value) |>
+  filter(!title %in% c("Filter Results", "website-search"))  
+```
+
+```{r}
+press_urls <- press_page |>
+  html_elements("a") |>
+  html_attr("href") |>
+  as_tibble() |>
+  rename(url = value) |>
+  filter(
+    str_starts(url, "https://www.vanhollen.senate.gov/news/press-releases/"),
+    !str_detect(url, "\\.(png|jpg|jpeg|gif|svg|ico)$"), 
+    !str_detect(url, "^/assets/"),                      
+    url != "/"
+  ) |>
+  distinct()  
+```
+
+```{r}
+press_releases <- bind_cols(press_titles, press_dates, press_urls)
+```
+
+```{r}
+head(press_releases)
+```
+
+
+
+
