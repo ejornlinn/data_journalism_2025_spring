@@ -20,6 +20,7 @@ Task: Load libraries (we will probably want to load more libraries later to answ
 #load libraries 
 library(tidyverse)
 library(janitor)
+library(dplyr)
 library(lubridate) #could be helpful because we are working with dates
 ```
 
@@ -159,9 +160,86 @@ print(most_harris_votes)
 print(most_alsobrooks_votes)
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+Question 3: Did certain precincts have more significant levels of mail-in ballots than others? Are they concentrated within certain counties?
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+Answer: Looking at the data frame, I can see that the precincts with the highest percent of mail in ballots are mostly concentrated  in Baltimore County and Baltimore City. The top percents range from 10-11%. After, I created a table to look at the top jurisdictions and found that this was true, jurisctions and precinct IDs measured up. 
+```{r}
+library(dplyr)
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+# precinct-level summary
+precinct_mail <-
+  md_precinct |>
+    group_by(jurisdiction, precinct_id, precinct_name) |>
+    summarise(
+      ballots_cast = first(ballots_cast),
+      mail_total = sum(mail_in_1 + mail_in_2, na.rm = TRUE),
+      mail_percent = mail_total / ballots_cast,
+      .groups = "drop"
+    ) |>
+arrange(desc(mail_percent))
+
+county_mail <-
+  precinct_mail |>
+    group_by(jurisdiction) |>
+    summarise(
+      county_ballots = sum(ballots_cast),
+      county_mail_total = sum(mail_total),
+      county_mail_percent = county_mail_total / county_ballots,
+      .groups = "drop"
+    ) |>
+arrange(desc(county_mail_percent))
+
+```
+
+Question 4: Did third-party candidates win any precincts within Maryland, and if so, where are those precincts located? Are they urban or rural?
+
+Answer: I see that no third-party candidates won any precincts in Maryland, the dataframe returned empty. 
+```{r}
+third_party_wins <-
+  md_precinct |>
+    filter(contest %in% c(
+      "President and Vice President of the United States",
+      "U.S. Senator"
+    )) |>
+    group_by(jurisdiction, precinct_id, precinct_name) |>
+    slice_max(order_by = total_votes, n = 1, with_ties = FALSE) |>
+    ungroup() |>
+    filter(!party %in% c("DEM", "REP"))
+
+```
+
+
+Question 5: Which Maryland county had the largest difference in vote turnout between the Senatorial and Presidential elections? Did more counties have higher turnout in the Senatorial election or the Presidential election? What demographic differences exist within those results?
+
+Answer: Overall, more counties had a higher presidential turnout than senatorial turnout, with 7 counties casting more votes in the Senate election and 17 counties casting more votes for president. Interestingly, the states six largest counties--Montgomery, Baltimore, Prince George's, Anne Arundel, Baltimore City and Howard--all saw higher turnout in the Senate election. Somerset County had the largest turnout difference between the election: 70.5 percent of registered voters there turned out to vote for president, but only 66.6 percent cast their votes in the Senate rate, a nearly 4-point gap. Garrett, Allegheny, Cecil and Washington counties were the other counties with turnout gaps above 1-point. All five counties are rural, either on the Eastern Shore or the Western Panhandle and typically vote Republican. 
+
+```{r}
+md_pres_counties <- md_precinct |>
+  rename(county = jurisdiction) |>
+  filter(contest == "President and Vice President of the United States") |>
+  group_by(county) |>
+  summarise(total_pres_votes = sum(total_votes, na.rm = TRUE), registered_voters = (sum(registered_voters, na.rm = TRUE)/6)) |>
+  arrange(desc(total_pres_votes)) |>
+  mutate(pres_vote_rate = (total_pres_votes/registered_voters)*100)
+
+md_sen_counties <- md_precinct |>
+  rename(county = jurisdiction) |>
+  filter(contest == "U.S. Senator") |>
+  group_by(county) |>
+  summarise(total_sen_votes = sum(total_votes, na.rm = TRUE), registered_voters = (sum(registered_voters, na.rm = TRUE)/4)) |>
+  arrange(desc(total_sen_votes)) |>
+  mutate(sen_vote_rate = (total_sen_votes/registered_voters)*100)
+
+md_vote_rate <- left_join(md_pres_counties, md_sen_counties, by = "county")
+
+md_vote_rate <- md_vote_rate |>
+  mutate(rate_change = (sen_vote_rate-pres_vote_rate)) |>
+  arrange(desc(rate_change))
+  
+  
+
+```
+
+Overall Analysis:
+From our analysis, we believe that our most newsworthy finding is that the largest turnout gaps between the 2024 Senate and presidential elections occured in rural, Republican-leaning counties on the Eastern and Western edges of the state. Initially, we had assumed that Maryland's red counties would have seen higher turnouts in the Senate race, since Larry Hogan was seen as a more competitive Republican candidate than Donald Trump. Trump lost to Biden by 33-point margin, while Hogan was able to secure two gubernatorial wins in the heavily Democratic state. Yet, our analysis revealed that across Somerset, Garrett, Allegheny, Cecil and Washington counties, the presidential election drew turnouts more than 1-point larger than the Senate election, possibly hinting towards intraparty dissatisfaction with Hogan's anti-Trump stance and moderate politics.
 
